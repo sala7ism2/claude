@@ -53,15 +53,19 @@ def get_auth(pw):
 
 
 def items_of(j):
-    """Find the list of records + total pages in a Spring-style or plain response."""
-    if isinstance(j, list): return j, None
-    for k in ("content", "data", "items", "result", "results", "records"):
-        v = j.get(k)
-        if isinstance(v, list): return v, j.get("totalPages")
-        if isinstance(v, dict):
-            r, t = items_of(v)
-            if r: return r, t or j.get("totalPages")
-    return [], None
+    """Return (largest list of dicts anywhere in the JSON, totalPages if present)."""
+    best, tp = [], None
+    def walk(o):
+        nonlocal best, tp
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k in ("totalPages", "total_pages") and isinstance(v, int): tp = v
+                walk(v)
+        elif isinstance(o, list):
+            if o and all(isinstance(x, dict) for x in o) and len(o) > len(best): best = o
+            for x in o: walk(x)
+    walk(j)
+    return best, tp
 
 
 def main():
