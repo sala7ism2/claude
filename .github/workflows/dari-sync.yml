@@ -1,0 +1,17 @@
+name: Dari daily sync
+on:
+  schedule: [{cron: "0 4 * * *"}]   # 08:00 Abu Dhabi
+  workflow_dispatch:
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r dari-scraper/requirements.txt && playwright install --with-deps chromium
+      - run: python dari-scraper/sync_dari.py
+        env:
+          SHEET_ID: ${{ secrets.SHEET_ID }}
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
