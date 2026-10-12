@@ -17,6 +17,10 @@ SIZE, DELAY = 12, 0.4
 
 
 def main():
+    missing = [k for k in ("SHEET_ID", "GOOGLE_SA_JSON") if not os.environ.get(k)]
+    if missing:   # not configured yet: skip without failing the run
+        print(f"::warning::Dari sync skipped - GitHub secret(s) not set: {', '.join(missing)}")
+        return
     gc = gspread.service_account_from_dict(json.loads(os.environ["GOOGLE_SA_JSON"]))
     sh = gc.open_by_key(os.environ["SHEET_ID"])
     ws = sh.worksheet(os.environ["SHEET_TAB"]) if os.environ.get("SHEET_TAB") else sh.sheet1
